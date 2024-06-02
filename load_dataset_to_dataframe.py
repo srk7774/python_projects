@@ -1,27 +1,25 @@
-import numpy as np
 import pandas as pd
-from sklearn.datasets import load_iris  # You can replace this with any sklearn dataset loader
+from sklearn.utils import Bunch
 
-def load_dataset_to_dataframe(loader):
+def load_dataset_to_dataframe(dataset: Bunch) -> pd.DataFrame:
     """
-    Converts a sklearn dataset into a pandas DataFrame including target labels and names if available.
-    
+    Convert a sklearn dataset to a pandas DataFrame, including target variable as a categorical column name if applicable.
+
     Parameters:
-    - loader: a function that loads an sklearn dataset.
-    
+    dataset (Bunch): The sklearn dataset to convert.
+
     Returns:
-    - A pandas DataFrame with features and target, with target names as categorical data if available.
+    pd.DataFrame: The dataset as a pandas DataFrame.
     """
-    # Load the dataset
-    data = loader()
+    # Convert the dataset to a DataFrame
+    df = pd.DataFrame(dataset.data, columns=dataset.feature_names)
     
-    # Check if target names are available, otherwise use numerical targets
-    if 'target_names' in data and data.target_names is not None:
-        target_name = 'species'
-        data_df = pd.DataFrame(data=np.c_[data['data'], data['target']], columns=data['feature_names'] + ['target'])
-        data_df[target_name] = pd.Categorical.from_codes(data.target, data.target_names)
-    else:
-        target_name = 'target'
-        data_df = pd.DataFrame(data=np.c_[data['data'], data['target']], columns=data['feature_names'] + [target_name])
-    
-    return data_df
+    # Add the target if available
+    if 'target' in dataset:
+        df['target'] = dataset.target
+        
+        # Add the target names as a categorical column if available
+        if 'target_names' in dataset:
+            df['target_name'] = pd.Categorical.from_codes(dataset.target, dataset.target_names)
+
+    return df
